@@ -1,0 +1,1 @@
+# activemq-scheduler-store-advisory
