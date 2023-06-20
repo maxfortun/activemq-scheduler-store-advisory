@@ -123,17 +123,4 @@
     </plugins>
   </build>
 
-  <distributionManagement>
-        <repository>
-            <id>artifactory</id>
-            <name>artifactory-releases</name>
-            <url>https://artifactory.dowjones.io:443/artifactory/djsp-pubedit-release-local</url>
-        </repository>
-        <snapshotRepository>
-            <id>artifactory-snapshots</id>
-            <name>artifactory-snapshots</name>
-            <url>https://artifactory.dowjones.io:443/artifactory/djsp-pubedit-release-local</url>
-        </snapshotRepository>
-    </distributionManagement>
-
 </project>
