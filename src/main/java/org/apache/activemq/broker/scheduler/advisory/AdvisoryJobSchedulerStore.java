@@ -28,6 +28,8 @@ import org.apache.activemq.broker.scheduler.JobSchedulerStore;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
 
+import org.apache.activemq.broker.scheduler.SchedulerUtils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,10 +44,12 @@ public class AdvisoryJobSchedulerStore extends ServiceSupport implements JobSche
 	private final Map<String, AdvisoryJobScheduler> schedulers = new HashMap<String, AdvisoryJobScheduler>();
 
 	private final BrokerService brokerService;
+	private final SchedulerUtils schedulerUtils;
 	private final JobSchedulerStore delegateJobSchedulerStore;
 	
 	public AdvisoryJobSchedulerStore(BrokerService brokerService, JobSchedulerStore delegateJobSchedulerStore) {
 		this.brokerService = brokerService;
+		this.schedulerUtils = new SchedulerUtils(brokerService);
 		this.delegateJobSchedulerStore = delegateJobSchedulerStore;
 	}
 
@@ -84,7 +88,7 @@ public class AdvisoryJobSchedulerStore extends ServiceSupport implements JobSche
 				if(null != delegateJobSchedulerStore) {
 					delegateJobScheduler = delegateJobSchedulerStore.getJobScheduler(name);
 				}
-				result = new AdvisoryJobScheduler(name, brokerService, delegateJobScheduler);
+				result = new AdvisoryJobScheduler(name, schedulerUtils, delegateJobScheduler);
 				this.schedulers.put(name, result);
 				if (isStarted()) {
 					result.startDispatching();

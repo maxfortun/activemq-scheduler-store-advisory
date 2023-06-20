@@ -23,6 +23,10 @@ import org.apache.activemq.broker.scheduler.JobListener;
 
 import org.apache.activemq.util.ByteSequence;
 
+import org.apache.activemq.command.ActiveMQDestination;
+
+import org.apache.activemq.broker.scheduler.SchedulerUtils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,12 +76,16 @@ public class AdvisoryJobListener implements JobListener {
 	 */
 	public static final String AMQ_SCHEDULER_ACTIVITY_REMOVED_RANGE = "REMOVED_RANGE";
 
-	private final BrokerService brokerService;
+	private final SchedulerUtils schedulerUtils;
 	private final JobListener delegateJobListener; 
 
-	public AdvisoryJobListener(BrokerService brokerService, JobListener delegateJobListener) {
-		this.brokerService = brokerService;
+	private ActiveMQDestination destination;
+
+	public AdvisoryJobListener(SchedulerUtils schedulerUtils, JobListener delegateJobListener) {
+		this.schedulerUtils = schedulerUtils;
 		this.delegateJobListener = delegateJobListener;
+		this.destination = ActiveMQDestination.createDestination(AMQ_SCHEDULER_ACTIVITY_DESTINATION, ActiveMQDestination.TOPIC_TYPE);
+        LOG.info("Destination: {}", this.destination);
 	}
 
 	public void willScheduleJob(String id, ByteSequence job) throws Exception  {
