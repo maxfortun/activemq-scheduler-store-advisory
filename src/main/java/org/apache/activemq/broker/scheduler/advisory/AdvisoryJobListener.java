@@ -17,13 +17,25 @@
 
 package org.apache.activemq.broker.scheduler.advisory;
 
+import org.apache.activemq.advisory.AdvisorySupport;
+
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.ProducerBrokerExchange;
 
 import org.apache.activemq.broker.scheduler.JobListener;
 
 import org.apache.activemq.util.ByteSequence;
+import org.apache.activemq.util.IdGenerator;
+import org.apache.activemq.util.LongSequenceGenerator;
 
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.Message;
+import org.apache.activemq.command.MessageId;
+import org.apache.activemq.command.ProducerId;
+import org.apache.activemq.command.ProducerInfo;
+
+import org.apache.activemq.state.ProducerState;
 
 import org.apache.activemq.broker.scheduler.SchedulerUtils;
 
@@ -76,6 +88,11 @@ public class AdvisoryJobListener implements JobListener {
 	 */
 	public static final String AMQ_SCHEDULER_ACTIVITY_REMOVED_RANGE = "REMOVED_RANGE";
 
+    private static final IdGenerator ID_GENERATOR = new IdGenerator();
+
+	private final LongSequenceGenerator messageIdGenerator = new LongSequenceGenerator();
+    private final ProducerId producerId = new ProducerId();
+
 	private final SchedulerUtils schedulerUtils;
 	private final JobListener delegateJobListener; 
 
@@ -85,7 +102,7 @@ public class AdvisoryJobListener implements JobListener {
 		this.schedulerUtils = schedulerUtils;
 		this.delegateJobListener = delegateJobListener;
 		this.destination = ActiveMQDestination.createDestination(AMQ_SCHEDULER_ACTIVITY_DESTINATION, ActiveMQDestination.TOPIC_TYPE);
-        LOG.info("Destination: {}", this.destination);
+		LOG.info("Destination: {}", this.destination);
 	}
 
 	public void willScheduleJob(String id, ByteSequence job) throws Exception  {
@@ -120,5 +137,34 @@ public class AdvisoryJobListener implements JobListener {
 
 	public void didRemoveRange(long start, long end) throws Exception {
 	}
+
+	protected void forwardMessage(Message message) throws Exception {
+		message.setOriginalTransactionId(null);
+		message.setPersistent(false);
+		message.setType(AdvisorySupport.ADIVSORY_MESSAGE_TYPE);
+		message.setMessageId(new MessageId(producerId, messageIdGenerator.getNextSequenceId()));
+
+		// Preserve original destination
+		message.setOriginalDestination(message.getDestination());
+
+		message.setDestination(destination);
+		message.setResponseRequired(false);
+		message.setProducerId(producerId);
+
+		ConnectionContext context = schedulerUtils.getBrokerService().getAdminConnectionContext();
+		final boolean originalFlowControl = context.isProducerFlowControl();
+		final ProducerBrokerExchange producerExchange = new ProducerBrokerExchange();
+		producerExchange.setConnectionContext(context);
+		producerExchange.setMutable(true);
+		producerExchange.setProducerState(new ProducerState(new ProducerInfo()));
+		try {
+			context.setProducerFlowControl(false);
+			LOG.trace("{}", message);
+			schedulerUtils.getBrokerService().getBroker().send(producerExchange, message);
+		} finally {
+			context.setProducerFlowControl(originalFlowControl);
+		}
+	}
+
 }
 

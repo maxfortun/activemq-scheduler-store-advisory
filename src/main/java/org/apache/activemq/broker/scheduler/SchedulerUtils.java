@@ -62,6 +62,10 @@ public class SchedulerUtils implements BrokerServiceAware {
 		this.jobFactory = jobFactory;
 	}
 
+	public BrokerService getBrokerService() {
+		return brokerService;
+	}   
+
 	public void setBrokerService(BrokerService brokerService) {
 		this.brokerService = brokerService;
 	}   
