@@ -6,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *	  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.activemq.broker.scheduler.Job;
@@ -37,160 +38,222 @@ import org.slf4j.LoggerFactory;
  */
 public class AdvisoryJobScheduler implements JobScheduler {
 
-    private static final Logger LOG = LoggerFactory.getLogger(AdvisoryJobScheduler.class);
+	private static final Logger LOG = LoggerFactory.getLogger(AdvisoryJobScheduler.class);
 
-    private final String name;
+	private final String name;
 
 	private JobScheduler delegateJobScheduler = null;
 
+	private final AtomicBoolean dispatchEnabled = new AtomicBoolean(false);
 	private final Map<JobListener, AdvisoryJobListener> jobListeners = new ConcurrentHashMap<>();
 
-    public AdvisoryJobScheduler(String name, JobScheduler delegateJobScheduler) {
+	public AdvisoryJobScheduler(String name, JobScheduler delegateJobScheduler) {
 		this(name);
 		this.delegateJobScheduler = delegateJobScheduler;
-    }
+		LOG.trace("AdvisoryJobScheduler[{}] created with delegate {}", name, delegateJobScheduler);
+	}
 
-    public AdvisoryJobScheduler(String name) {
-        this.name = name;
-    }
+	public AdvisoryJobScheduler(String name) {
+		this.name = name;
+		LOG.trace("AdvisoryJobScheduler[{}] created", name);
+	}
 
-    @Override
-    public String getName() throws Exception {
-        return name;
-    }
+	@Override
+	public String getName() throws Exception {
+		return name;
+	}
 
-    @Override
-    public void startDispatching() throws Exception {
-		if(null == delegateJobScheduler) {
-			return;
+	@Override
+	public void startDispatching() throws Exception {
+		if(null != delegateJobScheduler) {
+			LOG.trace("AdvisoryJobScheduler[{}] delegating startDispatching to {}", name, delegateJobScheduler);
+			delegateJobScheduler.startDispatching();
 		}
-		delegateJobScheduler.startDispatching();
-    }
 
-    @Override
-    public void stopDispatching() throws Exception {
-		if(null == delegateJobScheduler) {
-			return;
+		dispatchEnabled.set(true);
+		LOG.trace("AdvisoryJobScheduler[{}] dispatching: ", name, dispatchEnabled.get());
+	}
+
+	@Override
+	public void stopDispatching() throws Exception {
+		dispatchEnabled.set(false);
+		LOG.trace("AdvisoryJobScheduler[{}] dispatching: ", name, dispatchEnabled.get());
+
+		if(null != delegateJobScheduler) {
+			LOG.trace("AdvisoryJobScheduler[{}] delegating stopDispatching to {}", name, delegateJobScheduler);
+			delegateJobScheduler.stopDispatching();
 		}
-		delegateJobScheduler.stopDispatching();
-    }
+	}
 
-    @Override
-    public void addListener(JobListener listener) throws Exception {
+	@Override
+	public void addListener(JobListener listener) throws Exception {
+		LOG.trace("AdvisoryJobScheduler[{}] add listener: {}", name, listener);
+
 		AdvisoryJobListener advisoryJobListener = new AdvisoryJobListener(listener);
 		jobListeners.put(listener, advisoryJobListener);
 
-		if(null == delegateJobScheduler) {
-			return;
+		if(null != delegateJobScheduler) {
+			LOG.trace("AdvisoryJobScheduler[{}] delegating addListener[{}] to {}", name, listener, delegateJobScheduler);
+			delegateJobScheduler.addListener(advisoryJobListener);
 		}
-		delegateJobScheduler.addListener(advisoryJobListener);
-    }
+	}
 
-    @Override
-    public void removeListener(JobListener listener) throws Exception {
+	@Override
+	public void removeListener(JobListener listener) throws Exception {
+		LOG.trace("AdvisoryJobScheduler[{}] remove listener: {}", name, listener);
+
 		AdvisoryJobListener advisoryJobListener = jobListeners.remove(listener);
 
-		if(null == delegateJobScheduler) {
-			return;
+		if(null != delegateJobScheduler) {
+			LOG.trace("AdvisoryJobScheduler[{}] delegating removeListener[{}] to {}", name, listener, delegateJobScheduler);
+			delegateJobScheduler.removeListener(advisoryJobListener);
 		}
-		delegateJobScheduler.removeListener(advisoryJobListener);
-    }
+	}
 
-    @Override
-    public void schedule(String jobId, ByteSequence payload, long delay) throws Exception {
-		if(null == delegateJobScheduler) {
-			return;
+	@Override
+	public void schedule(String jobId, ByteSequence payload, long delay) throws Exception {
+		for(AdvisoryJobListener advisoryJobListener : jobListeners.values()) {
+			advisoryJobListener.willScheduleJob(jobId, payload);
 		}
-		delegateJobScheduler.schedule(jobId, payload, delay);
-    }
 
-    @Override
-    public void schedule(String jobId, ByteSequence payload, String cronEntry) throws Exception {
-		if(null == delegateJobScheduler) {
-			return;
+		if(null != delegateJobScheduler) {
+			delegateJobScheduler.schedule(jobId, payload, delay);
 		}
-		delegateJobScheduler.schedule(jobId, payload, cronEntry);
-    }
 
-    @Override
-    public void schedule(String jobId, ByteSequence payload, String cronEntry, long delay, long period, int repeat) throws Exception {
-		if(null == delegateJobScheduler) {
-			return;
+		for(AdvisoryJobListener advisoryJobListener : jobListeners.values()) {
+			advisoryJobListener.didScheduleJob(jobId, payload);
 		}
-		delegateJobScheduler.schedule(jobId, payload, cronEntry, delay, period, repeat);
-    }
+	}
 
-    @Override
-    public void remove(long time) throws Exception {
-		if(null == delegateJobScheduler) {
-			return;
+	@Override
+	public void schedule(String jobId, ByteSequence payload, String cronEntry) throws Exception {
+		for(AdvisoryJobListener advisoryJobListener : jobListeners.values()) {
+			advisoryJobListener.willScheduleJob(jobId, payload);
 		}
-		delegateJobScheduler.remove(time);
-    }
 
-    @Override
-    public void remove(String jobId) throws Exception {
-		if(null == delegateJobScheduler) {
-			return;
+		if(null != delegateJobScheduler) {
+			delegateJobScheduler.schedule(jobId, payload, cronEntry);
 		}
-		delegateJobScheduler.remove(jobId);
-    }
 
-    @Override
-    public void removeAllJobs() throws Exception {
-		if(null == delegateJobScheduler) {
-			return;
+		for(AdvisoryJobListener advisoryJobListener : jobListeners.values()) {
+			advisoryJobListener.didScheduleJob(jobId, payload);
 		}
-		delegateJobScheduler.removeAllJobs();
-    }
+	}
 
-    @Override
-    public void removeAllJobs(long start, long finish) throws Exception {
-		if(null == delegateJobScheduler) {
-			return;
+	@Override
+	public void schedule(String jobId, ByteSequence payload, String cronEntry, long delay, long period, int repeat) throws Exception {
+		for(AdvisoryJobListener advisoryJobListener : jobListeners.values()) {
+			advisoryJobListener.willScheduleJob(jobId, payload);
 		}
-		delegateJobScheduler.removeAllJobs(start, finish);
-    }
 
-    @Override
-    public long getNextScheduleTime() throws Exception {
+		if(null != delegateJobScheduler) {
+			delegateJobScheduler.schedule(jobId, payload, cronEntry, delay, period, repeat);
+		}
+
+		for(AdvisoryJobListener advisoryJobListener : jobListeners.values()) {
+			advisoryJobListener.didScheduleJob(jobId, payload);
+		}
+	}
+
+	@Override
+	public void remove(long time) throws Exception {
+		for(AdvisoryJobListener advisoryJobListener : jobListeners.values()) {
+			advisoryJobListener.willRemoveRange(time, time);
+		}
+
+		if(null != delegateJobScheduler) {
+			delegateJobScheduler.remove(time);
+		}
+
+		for(AdvisoryJobListener advisoryJobListener : jobListeners.values()) {
+			advisoryJobListener.didRemoveRange(time, time);
+		}
+	}
+
+	@Override
+	public void remove(String jobId) throws Exception {
+		for(AdvisoryJobListener advisoryJobListener : jobListeners.values()) {
+			advisoryJobListener.willRemoveJob(jobId);
+		}
+
+		if(null != delegateJobScheduler) {
+			delegateJobScheduler.remove(jobId);
+		}
+
+		for(AdvisoryJobListener advisoryJobListener : jobListeners.values()) {
+			advisoryJobListener.didRemoveJob(jobId);
+		}
+	}
+
+	@Override
+	public void removeAllJobs() throws Exception {
+		for(AdvisoryJobListener advisoryJobListener : jobListeners.values()) {
+			advisoryJobListener.willRemoveRange(0, Long.MAX_VALUE);
+		}
+
+		if(null != delegateJobScheduler) {
+			delegateJobScheduler.removeAllJobs();
+		}
+
+		for(AdvisoryJobListener advisoryJobListener : jobListeners.values()) {
+			advisoryJobListener.didRemoveRange(0, Long.MAX_VALUE);
+		}
+	}
+
+	@Override
+	public void removeAllJobs(long start, long finish) throws Exception {
+		for(AdvisoryJobListener advisoryJobListener : jobListeners.values()) {
+			advisoryJobListener.willRemoveRange(start, finish);
+		}
+
+		if(null != delegateJobScheduler) {
+			delegateJobScheduler.removeAllJobs(start, finish);
+		}
+
+		for(AdvisoryJobListener advisoryJobListener : jobListeners.values()) {
+			advisoryJobListener.didRemoveRange(start, finish);
+		}
+	}
+
+	@Override
+	public long getNextScheduleTime() throws Exception {
 		if(null == delegateJobScheduler) {
 			return -1L;
 		}
 		return delegateJobScheduler.getNextScheduleTime();
-    }
+	}
 
-    @Override
-    public List<Job> getNextScheduleJobs() throws Exception {
+	@Override
+	public List<Job> getNextScheduleJobs() throws Exception {
 		if(null == delegateJobScheduler) {
 			return new ArrayList<Job>();
 		}
 		return delegateJobScheduler.getNextScheduleJobs();
-    }
+	}
 
-    @Override
-    public List<Job> getAllJobs() throws Exception {
+	@Override
+	public List<Job> getAllJobs() throws Exception {
 		if(null == delegateJobScheduler) {
 			return new ArrayList<Job>();
 		}
 		return delegateJobScheduler.getAllJobs();
-    }
+	}
 
-    @Override
-    public List<Job> getAllJobs(long start, long finish) throws Exception {
+	@Override
+	public List<Job> getAllJobs(long start, long finish) throws Exception {
 		if(null == delegateJobScheduler) {
 			return new ArrayList<Job>();
 		}
 		return delegateJobScheduler.getAllJobs(start, finish);
-    }
+	}
 
-    @Override
-    public int hashCode() {
-        return name.hashCode();
-    }
+	@Override
+	public int hashCode() {
+		return name.hashCode();
+	}
 
-    @Override
-    public String toString() {
-        return "JobScheduler: " + name;
-    }
+	@Override
+	public String toString() {
+		return "JobScheduler: " + name;
+	}
 }

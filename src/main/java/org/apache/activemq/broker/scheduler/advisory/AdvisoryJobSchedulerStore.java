@@ -6,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *	  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -35,10 +35,10 @@ import org.slf4j.LoggerFactory;
  */
 public class AdvisoryJobSchedulerStore extends ServiceSupport implements JobSchedulerStore {
 
-    private static final Logger LOG = LoggerFactory.getLogger(AdvisoryJobSchedulerStore.class);
+	private static final Logger LOG = LoggerFactory.getLogger(AdvisoryJobSchedulerStore.class);
 
-    private final ReentrantLock lock = new ReentrantLock();
-    private final Map<String, AdvisoryJobScheduler> schedulers = new HashMap<String, AdvisoryJobScheduler>();
+	private final ReentrantLock lock = new ReentrantLock();
+	private final Map<String, AdvisoryJobScheduler> schedulers = new HashMap<String, AdvisoryJobScheduler>();
 
 	private JobSchedulerStore delegateJobSchedulerStore;
 	
@@ -46,85 +46,85 @@ public class AdvisoryJobSchedulerStore extends ServiceSupport implements JobSche
 		this.delegateJobSchedulerStore = delegateJobSchedulerStore;
 	}
 
-    @Override
-    protected void doStop(ServiceStopper stopper) throws Exception {
-        for (AdvisoryJobScheduler scheduler : schedulers.values()) {
-            try {
-                scheduler.stopDispatching();
-            } catch (Exception e) {
-                LOG.error("Failed to stop scheduler: {}", scheduler.getName(), e);
-            }
-        }
+	@Override
+	protected void doStop(ServiceStopper stopper) throws Exception {
+		for (AdvisoryJobScheduler scheduler : schedulers.values()) {
+			try {
+				scheduler.stopDispatching();
+			} catch (Exception e) {
+				LOG.error("Failed to stop scheduler: {}", scheduler.getName(), e);
+			}
+		}
 		delegateJobSchedulerStore.stop();
-    }
+	}
 
-    @Override
-    protected void doStart() throws Exception {
+	@Override
+	protected void doStart() throws Exception {
 		delegateJobSchedulerStore.start();
-        for (AdvisoryJobScheduler scheduler : schedulers.values()) {
-            try {
-                scheduler.startDispatching();
-            } catch (Exception e) {
-                LOG.error("Failed to start scheduler: {}", scheduler.getName(), e);
-            }
-        }
-    }
+		for (AdvisoryJobScheduler scheduler : schedulers.values()) {
+			try {
+				scheduler.startDispatching();
+			} catch (Exception e) {
+				LOG.error("Failed to start scheduler: {}", scheduler.getName(), e);
+			}
+		}
+	}
 
-    @Override
-    public JobScheduler getJobScheduler(String name) throws Exception {
-        this.lock.lock();
-        try {
-            AdvisoryJobScheduler result = this.schedulers.get(name);
-            if (result == null) {
-                LOG.debug("Creating new advisory scheduler: {}", name);
+	@Override
+	public JobScheduler getJobScheduler(String name) throws Exception {
+		this.lock.lock();
+		try {
+			AdvisoryJobScheduler result = this.schedulers.get(name);
+			if (result == null) {
+				LOG.debug("Creating new advisory scheduler: {}", name);
 				JobScheduler delegateJobScheduler = null;
 				if(null != delegateJobSchedulerStore) {
 					delegateJobScheduler = delegateJobSchedulerStore.getJobScheduler(name);
 				}
-                result = new AdvisoryJobScheduler(name, delegateJobScheduler);
-                this.schedulers.put(name, result);
-                if (isStarted()) {
-                    result.startDispatching();
-                }
-            }
-            return result;
-        } finally {
-            this.lock.unlock();
-        }
-    }
+				result = new AdvisoryJobScheduler(name, delegateJobScheduler);
+				this.schedulers.put(name, result);
+				if (isStarted()) {
+					result.startDispatching();
+				}
+			}
+			return result;
+		} finally {
+			this.lock.unlock();
+		}
+	}
 
-    @Override
-    public boolean removeJobScheduler(String name) throws Exception {
-        boolean result = false;
+	@Override
+	public boolean removeJobScheduler(String name) throws Exception {
+		boolean result = false;
 
-        this.lock.lock();
-        try {
-            AdvisoryJobScheduler scheduler = this.schedulers.remove(name);
-            result = scheduler != null;
-            if (result) {
-                LOG.debug("Removing advisory Job Scheduler: {}", name);
-                scheduler.stopDispatching();
-                this.schedulers.remove(name);
-            }
-        } finally {
-            this.lock.unlock();
-        }
-        return result;
-    }
+		this.lock.lock();
+		try {
+			AdvisoryJobScheduler scheduler = this.schedulers.remove(name);
+			result = scheduler != null;
+			if (result) {
+				LOG.debug("Removing advisory Job Scheduler: {}", name);
+				scheduler.stopDispatching();
+				this.schedulers.remove(name);
+			}
+		} finally {
+			this.lock.unlock();
+		}
+		return result;
+	}
 
-    //---------- Methods that don't really apply to this implementation ------//
+	//---------- Methods that don't really apply to this implementation ------//
 
-    @Override
-    public long size() {
-        return 0;
-    }
+	@Override
+	public long size() {
+		return 0;
+	}
 
-    @Override
-    public File getDirectory() {
-        return null;
-    }
+	@Override
+	public File getDirectory() {
+		return null;
+	}
 
-    @Override
-    public void setDirectory(File directory) {
-    }
+	@Override
+	public void setDirectory(File directory) {
+	}
 }
