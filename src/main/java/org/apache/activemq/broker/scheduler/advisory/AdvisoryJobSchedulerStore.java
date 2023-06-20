@@ -45,12 +45,17 @@ public class AdvisoryJobSchedulerStore extends ServiceSupport implements JobSche
 
 	private final BrokerService brokerService;
 	private final SchedulerUtils schedulerUtils;
-	private final JobSchedulerStore delegateJobSchedulerStore;
+
+	private JobSchedulerStore delegateJobSchedulerStore = null;
 	
 	public AdvisoryJobSchedulerStore(BrokerService brokerService, JobSchedulerStore delegateJobSchedulerStore) {
+		this(brokerService);
+		this.delegateJobSchedulerStore = delegateJobSchedulerStore;
+	}
+
+	public AdvisoryJobSchedulerStore(BrokerService brokerService) {
 		this.brokerService = brokerService;
 		this.schedulerUtils = new SchedulerUtils(brokerService);
-		this.delegateJobSchedulerStore = delegateJobSchedulerStore;
 	}
 
 	@Override
