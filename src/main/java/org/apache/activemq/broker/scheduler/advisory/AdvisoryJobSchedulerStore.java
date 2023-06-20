@@ -67,12 +67,18 @@ public class AdvisoryJobSchedulerStore extends ServiceSupport implements JobSche
 				LOG.error("Failed to stop scheduler: {}", scheduler.getName(), e);
 			}
 		}
-		delegateJobSchedulerStore.stop();
+
+		if( null != delegateJobSchedulerStore) {
+			delegateJobSchedulerStore.stop();
+		}
 	}
 
 	@Override
 	protected void doStart() throws Exception {
-		delegateJobSchedulerStore.start();
+		if( null != delegateJobSchedulerStore) {
+			delegateJobSchedulerStore.start();
+		}
+
 		for (AdvisoryJobScheduler scheduler : schedulers.values()) {
 			try {
 				scheduler.startDispatching();
