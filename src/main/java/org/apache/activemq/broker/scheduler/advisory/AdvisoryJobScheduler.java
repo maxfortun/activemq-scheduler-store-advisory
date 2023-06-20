@@ -19,32 +19,15 @@ package org.apache.activemq.broker.scheduler.advisory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.activemq.broker.scheduler.Job;
 import org.apache.activemq.broker.scheduler.JobListener;
 import org.apache.activemq.broker.scheduler.JobScheduler;
 
 import org.apache.activemq.util.ByteSequence;
-
-/*
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.TreeMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import javax.jms.MessageFormatException;
-
-import org.apache.activemq.broker.scheduler.CronParser;
-import org.apache.activemq.broker.scheduler.JobSupport;
-import org.apache.activemq.util.IdGenerator;
-
-*/
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,15 +40,10 @@ public class AdvisoryJobScheduler implements JobScheduler {
     private static final Logger LOG = LoggerFactory.getLogger(AdvisoryJobScheduler.class);
 
     private final String name;
-/*
-    private final TreeMap<Long, ScheduledTask> jobs = new TreeMap<>();
-    private final AtomicBoolean started = new AtomicBoolean(false);
-    private final AtomicBoolean dispatchEnabled = new AtomicBoolean(false);
-    private final List<JobListener> jobListeners = new CopyOnWriteArrayList<>();
-    private final Timer timer = new Timer();
-*/
 
 	private JobScheduler delegateJobScheduler = null;
+
+	private final Map<JobListener, AdvisoryJobListener> jobListeners = new ConcurrentHashMap<>();
 
     public AdvisoryJobScheduler(String name, JobScheduler delegateJobScheduler) {
 		this(name);
@@ -99,18 +77,23 @@ public class AdvisoryJobScheduler implements JobScheduler {
 
     @Override
     public void addListener(JobListener listener) throws Exception {
+		AdvisoryJobListener advisoryJobListener = new AdvisoryJobListener(listener);
+		jobListeners.put(listener, advisoryJobListener);
+
 		if(null == delegateJobScheduler) {
 			return;
 		}
-		delegateJobScheduler.addListener(listener);
+		delegateJobScheduler.addListener(advisoryJobListener);
     }
 
     @Override
     public void removeListener(JobListener listener) throws Exception {
+		AdvisoryJobListener advisoryJobListener = jobListeners.remove(listener);
+
 		if(null == delegateJobScheduler) {
 			return;
 		}
-		delegateJobScheduler.removeListener(listener);
+		delegateJobScheduler.removeListener(advisoryJobListener);
     }
 
     @Override
