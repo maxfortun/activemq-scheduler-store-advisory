@@ -49,48 +49,48 @@ public class AdvisoryJobListener implements JobListener {
 	private static final Logger LOG = LoggerFactory.getLogger(AdvisoryJobListener.class);
 
 	/**
-	 *  Used to specify which scheduler activity was performed on a Scheduled Message
+	 *  Used to specify which scheduler advisory was performed on a Scheduled Message
 	 */
-	public static final String AMQ_SCHEDULER_ACTIVITY_DESTINATION = "ActiveMQ.Scheduler.Activity";
+	public static final String AMQ_SCHEDULER_ADVISORY_DESTINATION = "ActiveMQ.Scheduler.Advisory";
 
 	/**
-	 *  Used to specify undesired activity properties
+	 *  Used to specify undesired advisory properties
 	 */
-	public static final String AMQ_SCHEDULER_ACTIVITY_FWD_EXCLUDE = "AMQ_SCHEDULER_ACTIVITY_FWD_EXCLUDE";
+	public static final String AMQ_SCHEDULER_ADVISORY_FWD_EXCLUDE = "AMQ_SCHEDULER_ADVISORY_FWD_EXCLUDE";
 
 	/**
-	 *  Used to specify desired activity properties
+	 *  Used to specify desired advisory properties
 	 */
-	public static final String AMQ_SCHEDULER_ACTIVITY_FWD_INCLUDE = "AMQ_SCHEDULER_ACTIVITY_FWD_INCLUDE";
+	public static final String AMQ_SCHEDULER_ADVISORY_FWD_INCLUDE = "AMQ_SCHEDULER_ADVISORY_FWD_INCLUDE";
 
 	/**
-	 *  Used to specify which scheduler activity was performed on a Scheduled Message
+	 *  Used to specify which scheduler advisory was performed on a Scheduled Message
 	 */
-	public static final String AMQ_SCHEDULER_ACTIVITY = "AMQ_SCHEDULER_ACTIVITY";
+	public static final String AMQ_SCHEDULER_ADVISORY = "AMQ_SCHEDULER_ADVISORY";
 
 	/**
 	 *  Message is scheduled
 	 */
-	public static final String AMQ_SCHEDULER_ACTIVITY_SCHEDULE = "SCHEDULE";
-	public static final String AMQ_SCHEDULER_ACTIVITY_SCHEDULED = "SCHEDULED";
+	public static final String AMQ_SCHEDULER_ADVISORY_SCHEDULE = "SCHEDULE";
+	public static final String AMQ_SCHEDULER_ADVISORY_SCHEDULED = "SCHEDULED";
 
 	/**
 	 *  Message is dispatched
 	 */
-	public static final String AMQ_SCHEDULER_ACTIVITY_DISPATCH = "DISPATCH";
-	public static final String AMQ_SCHEDULER_ACTIVITY_DISPATCHED = "DISPATCHED";
+	public static final String AMQ_SCHEDULER_ADVISORY_DISPATCH = "DISPATCH";
+	public static final String AMQ_SCHEDULER_ADVISORY_DISPATCHED = "DISPATCHED";
 
 	/**
 	 *  Message is removed
 	 */
-	public static final String AMQ_SCHEDULER_ACTIVITY_REMOVE = "REMOVE";
-	public static final String AMQ_SCHEDULER_ACTIVITY_REMOVED = "REMOVED";
+	public static final String AMQ_SCHEDULER_ADVISORY_REMOVE = "REMOVE";
+	public static final String AMQ_SCHEDULER_ADVISORY_REMOVED = "REMOVED";
 
 	/**
 	 *  Message is removed range
 	 */
-	public static final String AMQ_SCHEDULER_ACTIVITY_REMOVE_RANGE = "REMOVE_RANGE";
-	public static final String AMQ_SCHEDULER_ACTIVITY_REMOVED_RANGE = "REMOVED_RANGE";
+	public static final String AMQ_SCHEDULER_ADVISORY_REMOVE_RANGE = "REMOVE_RANGE";
+	public static final String AMQ_SCHEDULER_ADVISORY_REMOVED_RANGE = "REMOVED_RANGE";
 
     private static final IdGenerator ID_GENERATOR = new IdGenerator();
 
@@ -105,28 +105,28 @@ public class AdvisoryJobListener implements JobListener {
 	public AdvisoryJobListener(SchedulerUtils schedulerUtils, JobListener delegateJobListener) {
 		this.schedulerUtils = schedulerUtils;
 		this.delegateJobListener = delegateJobListener;
-		this.destination = ActiveMQDestination.createDestination(AMQ_SCHEDULER_ACTIVITY_DESTINATION, ActiveMQDestination.TOPIC_TYPE);
+		this.destination = ActiveMQDestination.createDestination(AMQ_SCHEDULER_ADVISORY_DESTINATION, ActiveMQDestination.TOPIC_TYPE);
 		LOG.info("Destination: {}", this.destination);
 	}
 
 	public void willScheduleJob(String id, ByteSequence job) throws Exception  {
 		LOG.debug("Schedule job {}", id);
         Message message = schedulerUtils.toMessage(id, job);
-        message.setProperty(AMQ_SCHEDULER_ACTIVITY, AMQ_SCHEDULER_ACTIVITY_SCHEDULE);
+        message.setProperty(AMQ_SCHEDULER_ADVISORY, AMQ_SCHEDULER_ADVISORY_SCHEDULE);
         forwardMessage(message);
 	}
 
 	public void didScheduleJob(String id, ByteSequence job) throws Exception {
 		LOG.debug("Scheduled job {}", id);
         Message message = schedulerUtils.toMessage(id, job);
-        message.setProperty(AMQ_SCHEDULER_ACTIVITY, AMQ_SCHEDULER_ACTIVITY_SCHEDULED);
+        message.setProperty(AMQ_SCHEDULER_ADVISORY, AMQ_SCHEDULER_ADVISORY_SCHEDULED);
         forwardMessage(message);
 	}
 
 	public void willDispatchJob(String id, ByteSequence job) throws Exception {
 		LOG.debug("Dispatch job {}", id);
         Message message = schedulerUtils.toMessage(id, job);
-        message.setProperty(AMQ_SCHEDULER_ACTIVITY, AMQ_SCHEDULER_ACTIVITY_DISPATCH);
+        message.setProperty(AMQ_SCHEDULER_ADVISORY, AMQ_SCHEDULER_ADVISORY_DISPATCH);
         forwardMessage(message);
 	}
 
@@ -142,35 +142,35 @@ public class AdvisoryJobListener implements JobListener {
 	public void didDispatchJob(String id, ByteSequence job) throws Exception {
 		LOG.debug("Dispatched job {}", id);
         Message message = schedulerUtils.toMessage(id, job);
-        message.setProperty(AMQ_SCHEDULER_ACTIVITY, AMQ_SCHEDULER_ACTIVITY_DISPATCHED);
+        message.setProperty(AMQ_SCHEDULER_ADVISORY, AMQ_SCHEDULER_ADVISORY_DISPATCHED);
         forwardMessage(message);
 	}
 
 	public void willRemoveJob(String id) throws Exception {
 		LOG.debug("Remove job {}", id);
         Message message = schedulerUtils.createMessage(id);
-        message.setProperty(AMQ_SCHEDULER_ACTIVITY, AMQ_SCHEDULER_ACTIVITY_REMOVE);
+        message.setProperty(AMQ_SCHEDULER_ADVISORY, AMQ_SCHEDULER_ADVISORY_REMOVE);
         forwardMessage(message);
 	}
 
 	public void didRemoveJob(String id) throws Exception {
 		LOG.debug("Removed job {}", id);
         Message message = schedulerUtils.createMessage(id);
-        message.setProperty(AMQ_SCHEDULER_ACTIVITY, AMQ_SCHEDULER_ACTIVITY_REMOVED);
+        message.setProperty(AMQ_SCHEDULER_ADVISORY, AMQ_SCHEDULER_ADVISORY_REMOVED);
         forwardMessage(message);
 	}
 
 	public void willRemoveRange(long start, long end) throws Exception {
 		LOG.debug("Remove range {} - {}", start, end);
         Message message = schedulerUtils.createMessage(start, end);
-        message.setProperty(AMQ_SCHEDULER_ACTIVITY, AMQ_SCHEDULER_ACTIVITY_REMOVE_RANGE);
+        message.setProperty(AMQ_SCHEDULER_ADVISORY, AMQ_SCHEDULER_ADVISORY_REMOVE_RANGE);
         forwardMessage(message);
 	}
 
 	public void didRemoveRange(long start, long end) throws Exception {
 		LOG.debug("Removed range {} - {}", start, end);
         Message message = schedulerUtils.createMessage(start, end);
-        message.setProperty(AMQ_SCHEDULER_ACTIVITY, AMQ_SCHEDULER_ACTIVITY_REMOVED_RANGE);
+        message.setProperty(AMQ_SCHEDULER_ADVISORY, AMQ_SCHEDULER_ADVISORY_REMOVED_RANGE);
         forwardMessage(message);
 	}
 
