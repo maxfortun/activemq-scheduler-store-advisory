@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.scheduler.Job;
 import org.apache.activemq.broker.scheduler.JobListener;
 import org.apache.activemq.broker.scheduler.JobScheduler;
@@ -41,20 +42,22 @@ public class AdvisoryJobScheduler implements JobScheduler {
 	private static final Logger LOG = LoggerFactory.getLogger(AdvisoryJobScheduler.class);
 
 	private final String name;
+	private final BrokerService brokerService;
 
 	private JobScheduler delegateJobScheduler = null;
 
 	private final AtomicBoolean dispatchEnabled = new AtomicBoolean(false);
 	private final Map<JobListener, AdvisoryJobListener> jobListeners = new ConcurrentHashMap<>();
 
-	public AdvisoryJobScheduler(String name, JobScheduler delegateJobScheduler) {
-		this(name);
+	public AdvisoryJobScheduler(String name, BrokerService brokerService, JobScheduler delegateJobScheduler) {
+		this(name, brokerService);
 		this.delegateJobScheduler = delegateJobScheduler;
 		LOG.trace("AdvisoryJobScheduler[{}] created with delegate {}", name, delegateJobScheduler);
 	}
 
-	public AdvisoryJobScheduler(String name) {
+	public AdvisoryJobScheduler(String name, BrokerService brokerService) {
 		this.name = name;
+		this.brokerService = brokerService;
 		LOG.trace("AdvisoryJobScheduler[{}] created", name);
 	}
 
@@ -89,7 +92,7 @@ public class AdvisoryJobScheduler implements JobScheduler {
 	public void addListener(JobListener listener) throws Exception {
 		LOG.trace("AdvisoryJobScheduler[{}] add listener: {}", name, listener);
 
-		AdvisoryJobListener advisoryJobListener = new AdvisoryJobListener(listener);
+		AdvisoryJobListener advisoryJobListener = new AdvisoryJobListener(brokerService, listener);
 		jobListeners.put(listener, advisoryJobListener);
 
 		if(null != delegateJobScheduler) {

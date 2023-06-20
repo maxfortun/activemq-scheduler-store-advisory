@@ -17,6 +17,8 @@
 
 package org.apache.activemq.broker.scheduler.advisory;
 
+import org.apache.activemq.broker.BrokerService;
+
 import org.apache.activemq.broker.scheduler.JobListener;
 
 import org.apache.activemq.util.ByteSequence;
@@ -31,41 +33,50 @@ public class AdvisoryJobListener implements JobListener {
 	private static final Logger LOG = LoggerFactory.getLogger(AdvisoryJobListener.class);
 
 	/**
-	 * Used to specify that a some operation should be performed on the Scheduled Message,
-	 * the Message must have an assigned Id for this action to be taken.
+	 *  Used to specify which scheduler activity was performed on a Scheduled Message
 	 */
-	public static final String AMQ_SCHEDULER_ACTION = "AMQ_SCHEDULER_ACTION";
+	public static final String AMQ_SCHEDULER_ACTIVITY_DESTINATION = "ActiveMQ.Scheduler.Activity";
 
 	/**
-	 * Indicates that a browse of the Scheduled Messages is being requested.
+	 *  Used to specify undesired activity properties
 	 */
-	public static final String AMQ_SCHEDULER_ACTION_BROWSE = "BROWSE";
-	/**
-	 * Indicates that a Scheduled Message is to be remove from the Scheduler, the Id of
-	 * the scheduled message must be set as a property in order for this action to have
-	 * any effect.
-	 */
-	public static final String AMQ_SCHEDULER_ACTION_REMOVE = "REMOVE";
-	/**
-	 * Indicates that all scheduled Messages should be removed.
-	 */
-	public static final String AMQ_SCHEDULER_ACTION_REMOVEALL = "REMOVEALL";
+	public static final String AMQ_SCHEDULER_ACTIVITY_FWD_EXCLUDE = "AMQ_SCHEDULER_ACTIVITY_FWD_EXCLUDE";
 
 	/**
-	 * A property that holds the beginning of the time interval that the specified action should
-	 * be applied within.  Maps to a long value that specified time in milliseconds since UTC.
+	 *  Used to specify desired activity properties
 	 */
-	public static final String AMQ_SCHEDULER_ACTION_START_TIME = "ACTION_START_TIME";
+	public static final String AMQ_SCHEDULER_ACTIVITY_FWD_INCLUDE = "AMQ_SCHEDULER_ACTIVITY_FWD_INCLUDE";
 
 	/**
-	 * A property that holds the end of the time interval that the specified action should be
-	 * applied within.  Maps to a long value that specified time in milliseconds since UTC.
+	 *  Used to specify which scheduler activity was performed on a Scheduled Message
 	 */
-	public static final String AMQ_SCHEDULER_ACTION_END_TIME = "ACTION_END_TIME";
+	public static final String AMQ_SCHEDULER_ACTIVITY = "AMQ_SCHEDULER_ACTIVITY";
 
-	private JobListener delegateJobListener; 
+	/**
+	 *  Message is scheduled
+	 */
+	public static final String AMQ_SCHEDULER_ACTIVITY_SCHEDULED = "SCHEDULED";
 
-	public AdvisoryJobListener(JobListener delegateJobListener) {
+	/**
+	 *  Message is dispatched
+	 */
+	public static final String AMQ_SCHEDULER_ACTIVITY_DISPATCHED = "DISPATCHED";
+
+	/**
+	 *  Message is removed
+	 */
+	public static final String AMQ_SCHEDULER_ACTIVITY_REMOVED = "REMOVED";
+
+	/**
+	 *  Message is removed range
+	 */
+	public static final String AMQ_SCHEDULER_ACTIVITY_REMOVED_RANGE = "REMOVED_RANGE";
+
+	private final BrokerService brokerService;
+	private final JobListener delegateJobListener; 
+
+	public AdvisoryJobListener(BrokerService brokerService, JobListener delegateJobListener) {
+		this.brokerService = brokerService;
 		this.delegateJobListener = delegateJobListener;
 	}
 
