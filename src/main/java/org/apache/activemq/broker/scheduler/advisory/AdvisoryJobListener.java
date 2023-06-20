@@ -71,21 +71,25 @@ public class AdvisoryJobListener implements JobListener {
 	/**
 	 *  Message is scheduled
 	 */
+	public static final String AMQ_SCHEDULER_ACTIVITY_SCHEDULE = "SCHEDULE";
 	public static final String AMQ_SCHEDULER_ACTIVITY_SCHEDULED = "SCHEDULED";
 
 	/**
 	 *  Message is dispatched
 	 */
+	public static final String AMQ_SCHEDULER_ACTIVITY_DISPATCH = "DISPATCH";
 	public static final String AMQ_SCHEDULER_ACTIVITY_DISPATCHED = "DISPATCHED";
 
 	/**
 	 *  Message is removed
 	 */
+	public static final String AMQ_SCHEDULER_ACTIVITY_REMOVE = "REMOVE";
 	public static final String AMQ_SCHEDULER_ACTIVITY_REMOVED = "REMOVED";
 
 	/**
 	 *  Message is removed range
 	 */
+	public static final String AMQ_SCHEDULER_ACTIVITY_REMOVE_RANGE = "REMOVE_RANGE";
 	public static final String AMQ_SCHEDULER_ACTIVITY_REMOVED_RANGE = "REMOVED_RANGE";
 
     private static final IdGenerator ID_GENERATOR = new IdGenerator();
@@ -106,12 +110,24 @@ public class AdvisoryJobListener implements JobListener {
 	}
 
 	public void willScheduleJob(String id, ByteSequence job) throws Exception  {
+		LOG.debug("Schedule job {}", id);
+        Message message = schedulerUtils.toMessage(id, job);
+        message.setProperty(AMQ_SCHEDULER_ACTIVITY, AMQ_SCHEDULER_ACTIVITY_SCHEDULE);
+        forwardMessage(message);
 	}
 
 	public void didScheduleJob(String id, ByteSequence job) throws Exception {
+		LOG.debug("Scheduled job {}", id);
+        Message message = schedulerUtils.toMessage(id, job);
+        message.setProperty(AMQ_SCHEDULER_ACTIVITY, AMQ_SCHEDULER_ACTIVITY_SCHEDULED);
+        forwardMessage(message);
 	}
 
 	public void willDispatchJob(String id, ByteSequence job) throws Exception {
+		LOG.debug("Dispatch job {}", id);
+        Message message = schedulerUtils.toMessage(id, job);
+        message.setProperty(AMQ_SCHEDULER_ACTIVITY, AMQ_SCHEDULER_ACTIVITY_DISPATCH);
+        forwardMessage(message);
 	}
 
 	// Actual dispatching of the job
@@ -124,18 +140,38 @@ public class AdvisoryJobListener implements JobListener {
 	}
 
 	public void didDispatchJob(String id, ByteSequence job) throws Exception {
+		LOG.debug("Dispatched job {}", id);
+        Message message = schedulerUtils.toMessage(id, job);
+        message.setProperty(AMQ_SCHEDULER_ACTIVITY, AMQ_SCHEDULER_ACTIVITY_DISPATCHED);
+        forwardMessage(message);
 	}
 
 	public void willRemoveJob(String id) throws Exception {
+		LOG.debug("Remove job {}", id);
+        Message message = schedulerUtils.createMessage(id);
+        message.setProperty(AMQ_SCHEDULER_ACTIVITY, AMQ_SCHEDULER_ACTIVITY_REMOVE);
+        forwardMessage(message);
 	}
 
 	public void didRemoveJob(String id) throws Exception {
+		LOG.debug("Removed job {}", id);
+        Message message = schedulerUtils.createMessage(id);
+        message.setProperty(AMQ_SCHEDULER_ACTIVITY, AMQ_SCHEDULER_ACTIVITY_REMOVED);
+        forwardMessage(message);
 	}
 
 	public void willRemoveRange(long start, long end) throws Exception {
+		LOG.debug("Remove range {} - {}", start, end);
+        Message message = schedulerUtils.createMessage(start, end);
+        message.setProperty(AMQ_SCHEDULER_ACTIVITY, AMQ_SCHEDULER_ACTIVITY_REMOVE_RANGE);
+        forwardMessage(message);
 	}
 
 	public void didRemoveRange(long start, long end) throws Exception {
+		LOG.debug("Removed range {} - {}", start, end);
+        Message message = schedulerUtils.createMessage(start, end);
+        message.setProperty(AMQ_SCHEDULER_ACTIVITY, AMQ_SCHEDULER_ACTIVITY_REMOVED_RANGE);
+        forwardMessage(message);
 	}
 
 	protected void forwardMessage(Message message) throws Exception {
