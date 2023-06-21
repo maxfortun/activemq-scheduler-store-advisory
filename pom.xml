@@ -27,8 +27,8 @@
 
   <artifactId>activemq-scheduler-store-advisory</artifactId>
   <packaging>jar</packaging>
-  <name>ActiveMQ :: Redis Store</name>
-  <description>The ActiveMQ Redis Store Implementation</description>
+  <name>ActiveMQ :: Advisory Store</name>
+  <description>The ActiveMQ Advisory Store Implementation</description>
 
   <properties>
     <surefire.argLine>-Xmx512M</surefire.argLine>
