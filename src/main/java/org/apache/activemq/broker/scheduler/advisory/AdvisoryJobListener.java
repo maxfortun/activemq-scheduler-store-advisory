@@ -107,6 +107,8 @@ public class AdvisoryJobListener implements JobListener {
 		this.delegateJobListener = delegateJobListener;
 		this.destination = ActiveMQDestination.createDestination(AMQ_SCHEDULER_ADVISORY_DESTINATION, ActiveMQDestination.TOPIC_TYPE);
 		LOG.info("Destination: {}", this.destination);
+
+		producerId.setConnectionId(ID_GENERATOR.generateId());
 	}
 
 	public void willScheduleJob(String id, ByteSequence job) throws Exception  {
