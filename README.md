@@ -15,6 +15,16 @@ Advisories have `AMQ_SCHEDULER_ADVISORY` header set with the type of advisory.
 | REMOVE_RANGE | Scheduler is about to remove a range previously scheduled messages |
 | REMOVED_RANGE | Scheduler has removed a range of previously scheduled messages |
 
+### Building
+```bash
+mvn clean package install
+```
+
+### Installing
+```bash
+cp target/activemq-scheduler-store-advisory-*.jar /opt/activemq/lib/optional/
+```
+
 ### Configuring broker
 While this is not a well documented feature, broker does allow to specify a custom jobSchedulerStore. By default broker comes with a KahaDb store and a memory store. This example creates a shim between the broker and the KahaDb store.
 
