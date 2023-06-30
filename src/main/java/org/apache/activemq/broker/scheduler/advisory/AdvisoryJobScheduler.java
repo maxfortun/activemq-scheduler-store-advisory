@@ -50,6 +50,7 @@ public class AdvisoryJobScheduler implements JobScheduler {
 
 	private final AtomicBoolean dispatchEnabled = new AtomicBoolean(false);
 	private final Map<JobListener, AdvisoryJobListener> jobListeners = new ConcurrentHashMap<>();
+	private final Map<String, ByteSequence> jobs = new ConcurrentHashMap<>();
 
 	public AdvisoryJobScheduler(String name, String advisoryDestination, SchedulerUtils schedulerUtils, JobScheduler delegateJobScheduler) {
 		this.name = name;
@@ -124,6 +125,8 @@ public class AdvisoryJobScheduler implements JobScheduler {
 		for(AdvisoryJobListener advisoryJobListener : jobListeners.values()) {
 			advisoryJobListener.didScheduleJob(jobId, payload);
 		}
+
+		jobs.put(jobId, payload);
 	}
 
 	@Override
@@ -139,6 +142,8 @@ public class AdvisoryJobScheduler implements JobScheduler {
 		for(AdvisoryJobListener advisoryJobListener : jobListeners.values()) {
 			advisoryJobListener.didScheduleJob(jobId, payload);
 		}
+
+		jobs.put(jobId, payload);
 	}
 
 	@Override
@@ -154,12 +159,14 @@ public class AdvisoryJobScheduler implements JobScheduler {
 		for(AdvisoryJobListener advisoryJobListener : jobListeners.values()) {
 			advisoryJobListener.didScheduleJob(jobId, payload);
 		}
+
+		jobs.put(jobId, payload);
 	}
 
 	@Override
 	public void remove(long time) throws Exception {
 		for(AdvisoryJobListener advisoryJobListener : jobListeners.values()) {
-			advisoryJobListener.willRemoveRange(time, time);
+			advisoryJobListener.willRemoveRange(time, time, jobs);
 		}
 
 		if(null != delegateJobScheduler) {
@@ -167,14 +174,21 @@ public class AdvisoryJobScheduler implements JobScheduler {
 		}
 
 		for(AdvisoryJobListener advisoryJobListener : jobListeners.values()) {
-			advisoryJobListener.didRemoveRange(time, time);
+			advisoryJobListener.didRemoveRange(time, time, jobs);
+		}
+
+		List<Job> delegateJobs = getAllJobs(time, time);
+		for(Job job : delegateJobs) {
+			jobs.remove(job.getJobId());
 		}
 	}
 
 	@Override
 	public void remove(String jobId) throws Exception {
+		ByteSequence payload = jobs.get(jobId);
+
 		for(AdvisoryJobListener advisoryJobListener : jobListeners.values()) {
-			advisoryJobListener.willRemoveJob(jobId);
+			advisoryJobListener.willRemoveJob(jobId, payload);
 		}
 
 		if(null != delegateJobScheduler) {
@@ -182,14 +196,16 @@ public class AdvisoryJobScheduler implements JobScheduler {
 		}
 
 		for(AdvisoryJobListener advisoryJobListener : jobListeners.values()) {
-			advisoryJobListener.didRemoveJob(jobId);
+			advisoryJobListener.didRemoveJob(jobId, payload);
 		}
+
+		jobs.remove(jobId);
 	}
 
 	@Override
 	public void removeAllJobs() throws Exception {
 		for(AdvisoryJobListener advisoryJobListener : jobListeners.values()) {
-			advisoryJobListener.willRemoveRange(0, Long.MAX_VALUE);
+			advisoryJobListener.willRemoveRange(0, Long.MAX_VALUE, jobs);
 		}
 
 		if(null != delegateJobScheduler) {
@@ -197,14 +213,16 @@ public class AdvisoryJobScheduler implements JobScheduler {
 		}
 
 		for(AdvisoryJobListener advisoryJobListener : jobListeners.values()) {
-			advisoryJobListener.didRemoveRange(0, Long.MAX_VALUE);
+			advisoryJobListener.didRemoveRange(0, Long.MAX_VALUE, jobs);
 		}
+
+		jobs.clear();
 	}
 
 	@Override
 	public void removeAllJobs(long start, long finish) throws Exception {
 		for(AdvisoryJobListener advisoryJobListener : jobListeners.values()) {
-			advisoryJobListener.willRemoveRange(start, finish);
+			advisoryJobListener.willRemoveRange(start, finish, jobs);
 		}
 
 		if(null != delegateJobScheduler) {
@@ -212,7 +230,12 @@ public class AdvisoryJobScheduler implements JobScheduler {
 		}
 
 		for(AdvisoryJobListener advisoryJobListener : jobListeners.values()) {
-			advisoryJobListener.didRemoveRange(start, finish);
+			advisoryJobListener.didRemoveRange(start, finish, jobs);
+		}
+
+		List<Job> delegateJobs = getAllJobs(start, finish);
+		for(Job job : delegateJobs) {
+			jobs.remove(job.getJobId());
 		}
 	}
 

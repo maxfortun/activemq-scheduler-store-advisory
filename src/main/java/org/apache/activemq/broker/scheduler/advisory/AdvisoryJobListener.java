@@ -17,6 +17,8 @@
 
 package org.apache.activemq.broker.scheduler.advisory;
 
+import java.util.Map;
+
 import org.apache.activemq.advisory.AdvisorySupport;
 
 import org.apache.activemq.broker.BrokerService;
@@ -143,28 +145,28 @@ public class AdvisoryJobListener implements JobListener {
         forwardMessage(message);
 	}
 
-	public void willRemoveJob(String id) throws Exception {
+	public void willRemoveJob(String id, ByteSequence job) throws Exception {
 		LOG.debug("Remove job {}", id);
         Message message = schedulerUtils.createMessage(id);
         message.setProperty(AMQ_SCHEDULER_ADVISORY, AMQ_SCHEDULER_ADVISORY_REMOVE);
         forwardMessage(message);
 	}
 
-	public void didRemoveJob(String id) throws Exception {
+	public void didRemoveJob(String id, ByteSequence job) throws Exception {
 		LOG.debug("Removed job {}", id);
         Message message = schedulerUtils.createMessage(id);
         message.setProperty(AMQ_SCHEDULER_ADVISORY, AMQ_SCHEDULER_ADVISORY_REMOVED);
         forwardMessage(message);
 	}
 
-	public void willRemoveRange(long start, long end) throws Exception {
+	public void willRemoveRange(long start, long end, Map<String,ByteSequence> jobs) throws Exception {
 		LOG.debug("Remove range {} - {}", start, end);
         Message message = schedulerUtils.createMessage(start, end);
         message.setProperty(AMQ_SCHEDULER_ADVISORY, AMQ_SCHEDULER_ADVISORY_REMOVE_RANGE);
         forwardMessage(message);
 	}
 
-	public void didRemoveRange(long start, long end) throws Exception {
+	public void didRemoveRange(long start, long end, Map<String,ByteSequence> jobs) throws Exception {
 		LOG.debug("Removed range {} - {}", start, end);
         Message message = schedulerUtils.createMessage(start, end);
         message.setProperty(AMQ_SCHEDULER_ADVISORY, AMQ_SCHEDULER_ADVISORY_REMOVED_RANGE);
