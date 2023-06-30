@@ -20,11 +20,6 @@ Advisories have `AMQ_SCHEDULER_ADVISORY` header set with the type of advisory.
 mvn clean package install
 ```
 
-### Installing artifact into ~/.m2/repository
-```bash
-cp target/activemq-scheduler-store-advisory-*.jar /opt/activemq/lib/optional/
-```
-
 ### Deploying artifact to a local maven repo
 Make sure your [settings.xml](https://maven.apache.org/settings.html) is properly configured.
 ```bash
@@ -32,6 +27,11 @@ repositoryId=$(xmllint --xpath '/*[local-name() = "settings"]/*[local = "activeP
 repositoryUrl=$(xmllint --xpath '/*[local-name() = "settings"]/*[local-name() = "profiles"]/*[local-name() = "profile" and *[local-name() = "id"]/text() = "$artifactoryId"]' ~/.m2/settings.xml)
 version=$(xmllint --xpath '/*[local-name() = "project"]/*[local-name() = "version"]/text()')
 mvn deploy:deploy-file -DrepositoryId=$repositoryId -Durl=$repositoryUrl -Dpackaging=jar -DgroupId=org.apache.activemq -DartifactId=activemq-scheduler-store-advisory -Dversion=$version -Dfile=target/activemq-scheduler-store-advisory-$version.jar
+```
+
+### Installing 
+```bash
+cp target/activemq-scheduler-store-advisory-*.jar /opt/activemq/lib/optional/
 ```
 
 ### Configuring broker
