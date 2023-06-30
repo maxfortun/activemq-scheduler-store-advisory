@@ -91,7 +91,7 @@ public class AdvisoryJobScheduler implements JobScheduler {
 	public void addListener(JobListener listener) throws Exception {
 		LOG.trace("AdvisoryJobScheduler[{}] add listener: {}", name, listener);
 
-		AdvisoryJobListener advisoryJobListener = new AdvisoryJobListener(advisoryDestination, schedulerUtils, listener);
+		AdvisoryJobListener advisoryJobListener = new AdvisoryJobListener(this, advisoryDestination, schedulerUtils, listener);
 		jobListeners.put(listener, advisoryJobListener);
 
 		if(null != delegateJobScheduler) {
@@ -179,7 +179,7 @@ public class AdvisoryJobScheduler implements JobScheduler {
 
 		List<Job> delegateJobs = getAllJobs(time, time);
 		for(Job job : delegateJobs) {
-			jobs.remove(job.getJobId());
+			removeJob(job.getJobId());
 		}
 	}
 
@@ -199,7 +199,7 @@ public class AdvisoryJobScheduler implements JobScheduler {
 			advisoryJobListener.didRemoveJob(jobId, payload);
 		}
 
-		jobs.remove(jobId);
+		removeJob(jobId);
 	}
 
 	@Override
@@ -235,7 +235,7 @@ public class AdvisoryJobScheduler implements JobScheduler {
 
 		List<Job> delegateJobs = getAllJobs(start, finish);
 		for(Job job : delegateJobs) {
-			jobs.remove(job.getJobId());
+			removeJob(job.getJobId());
 		}
 	}
 
@@ -269,6 +269,10 @@ public class AdvisoryJobScheduler implements JobScheduler {
 			return new ArrayList<Job>();
 		}
 		return delegateJobScheduler.getAllJobs(start, finish);
+	}
+
+	public void removeJob(String jobId) {
+		jobs.remove(jobId);
 	}
 
 	@Override

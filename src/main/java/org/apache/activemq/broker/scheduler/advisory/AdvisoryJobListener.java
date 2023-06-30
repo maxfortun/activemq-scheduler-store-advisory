@@ -94,12 +94,14 @@ public class AdvisoryJobListener implements JobListener {
 	private final LongSequenceGenerator messageIdGenerator = new LongSequenceGenerator();
     private final ProducerId producerId = new ProducerId();
 
+	private final AdvisoryJobScheduler advisoryJobScheduler;
 	private final SchedulerUtils schedulerUtils;
 	private final JobListener delegateJobListener; 
 
 	private ActiveMQDestination destination;
 
-	public AdvisoryJobListener(String destinationName, SchedulerUtils schedulerUtils, JobListener delegateJobListener) {
+	public AdvisoryJobListener(AdvisoryJobScheduler advisoryJobScheduler, String destinationName, SchedulerUtils schedulerUtils, JobListener delegateJobListener) {
+		this.advisoryJobScheduler = advisoryJobScheduler;
 		this.schedulerUtils = schedulerUtils;
 		this.delegateJobListener = delegateJobListener;
 		this.destination = ActiveMQDestination.createDestination(destinationName, ActiveMQDestination.TOPIC_TYPE);
@@ -132,10 +134,20 @@ public class AdvisoryJobListener implements JobListener {
 	// Actual dispatching of the job
 	@Override
 	public void scheduledJob(String id, ByteSequence job) {
-		if(null == delegateJobListener) {
-			return;
+		try {
+			willDispatchJob(id, job);
+		} catch(Exception e) {
+			LOG.warn("willDispatch({}): ", id, e);
 		}
-		delegateJobListener.scheduledJob(id, job);
+		if(null != delegateJobListener) {
+			delegateJobListener.scheduledJob(id, job);
+		}
+		try {
+			didDispatchJob(id, job);
+		} catch(Exception e) {
+			LOG.warn("didDispatch({}): ", id, e);
+		}
+		advisoryJobScheduler.removeJob(id);
 	}
 
 	public void didDispatchJob(String id, ByteSequence job) throws Exception {
