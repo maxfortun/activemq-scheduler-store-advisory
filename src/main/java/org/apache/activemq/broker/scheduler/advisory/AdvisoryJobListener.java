@@ -49,11 +49,6 @@ public class AdvisoryJobListener implements JobListener {
 	private static final Logger LOG = LoggerFactory.getLogger(AdvisoryJobListener.class);
 
 	/**
-	 *  Used to specify which scheduler advisory was performed on a Scheduled Message
-	 */
-	public static final String AMQ_SCHEDULER_ADVISORY_DESTINATION = "ActiveMQ.Scheduler.Advisory";
-
-	/**
 	 *  Used to specify undesired advisory properties
 	 */
 	public static final String AMQ_SCHEDULER_ADVISORY_FWD_EXCLUDE = "AMQ_SCHEDULER_ADVISORY_FWD_EXCLUDE";
@@ -102,10 +97,10 @@ public class AdvisoryJobListener implements JobListener {
 
 	private ActiveMQDestination destination;
 
-	public AdvisoryJobListener(SchedulerUtils schedulerUtils, JobListener delegateJobListener) {
+	public AdvisoryJobListener(String destinationName, SchedulerUtils schedulerUtils, JobListener delegateJobListener) {
 		this.schedulerUtils = schedulerUtils;
 		this.delegateJobListener = delegateJobListener;
-		this.destination = ActiveMQDestination.createDestination(AMQ_SCHEDULER_ADVISORY_DESTINATION, ActiveMQDestination.TOPIC_TYPE);
+		this.destination = ActiveMQDestination.createDestination(destinationName, ActiveMQDestination.TOPIC_TYPE);
 		LOG.info("Destination: {}", this.destination);
 
 		producerId.setConnectionId(ID_GENERATOR.generateId());

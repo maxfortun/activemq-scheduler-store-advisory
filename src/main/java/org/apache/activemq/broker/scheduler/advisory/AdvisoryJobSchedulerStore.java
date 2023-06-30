@@ -40,22 +40,29 @@ public class AdvisoryJobSchedulerStore extends ServiceSupport implements JobSche
 
 	private static final Logger LOG = LoggerFactory.getLogger(AdvisoryJobSchedulerStore.class);
 
+	/**
+     *  Used to specify which scheduler advisory was performed on a Scheduled Message
+     */
+    public static final String AMQ_SCHEDULER_ADVISORY_DESTINATION = "ActiveMQ.Scheduler.Advisory";
+
 	private final ReentrantLock lock = new ReentrantLock();
 	private final Map<String, AdvisoryJobScheduler> schedulers = new HashMap<String, AdvisoryJobScheduler>();
 
+	private final String advisoryDestination;
 	private final BrokerService brokerService;
 	private final SchedulerUtils schedulerUtils;
 
 	private JobSchedulerStore delegateJobSchedulerStore = null;
 	
-	public AdvisoryJobSchedulerStore(BrokerService brokerService, JobSchedulerStore delegateJobSchedulerStore) {
-		this(brokerService);
+	public AdvisoryJobSchedulerStore(BrokerService brokerService, String advisoryDestination, JobSchedulerStore delegateJobSchedulerStore) {
+		this.brokerService = brokerService;
+		this.schedulerUtils = new SchedulerUtils(brokerService);
+		this.advisoryDestination = advisoryDestination;
 		this.delegateJobSchedulerStore = delegateJobSchedulerStore;
 	}
 
 	public AdvisoryJobSchedulerStore(BrokerService brokerService) {
-		this.brokerService = brokerService;
-		this.schedulerUtils = new SchedulerUtils(brokerService);
+		this(brokerService, AMQ_SCHEDULER_ADVISORY_DESTINATION, null);
 	}
 
 	@Override
@@ -99,7 +106,7 @@ public class AdvisoryJobSchedulerStore extends ServiceSupport implements JobSche
 				if(null != delegateJobSchedulerStore) {
 					delegateJobScheduler = delegateJobSchedulerStore.getJobScheduler(name);
 				}
-				result = new AdvisoryJobScheduler(name, schedulerUtils, delegateJobScheduler);
+				result = new AdvisoryJobScheduler(name, advisoryDestination, schedulerUtils, delegateJobScheduler);
 				this.schedulers.put(name, result);
 				if (isStarted()) {
 					result.startDispatching();

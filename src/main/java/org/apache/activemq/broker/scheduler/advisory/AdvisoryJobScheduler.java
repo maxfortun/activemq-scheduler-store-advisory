@@ -44,23 +44,19 @@ public class AdvisoryJobScheduler implements JobScheduler {
 	private static final Logger LOG = LoggerFactory.getLogger(AdvisoryJobScheduler.class);
 
 	private final String name;
+	private final String advisoryDestination;
 	private final SchedulerUtils schedulerUtils;
-
-	private JobScheduler delegateJobScheduler = null;
+	private final JobScheduler delegateJobScheduler;
 
 	private final AtomicBoolean dispatchEnabled = new AtomicBoolean(false);
 	private final Map<JobListener, AdvisoryJobListener> jobListeners = new ConcurrentHashMap<>();
 
-	public AdvisoryJobScheduler(String name, SchedulerUtils schedulerUtils, JobScheduler delegateJobScheduler) {
-		this(name, schedulerUtils);
-		this.delegateJobScheduler = delegateJobScheduler;
-		LOG.trace("AdvisoryJobScheduler[{}] created with delegate {}", name, delegateJobScheduler);
-	}
-
-	public AdvisoryJobScheduler(String name, SchedulerUtils schedulerUtils) {
+	public AdvisoryJobScheduler(String name, String advisoryDestination, SchedulerUtils schedulerUtils, JobScheduler delegateJobScheduler) {
 		this.name = name;
+		this.advisoryDestination = advisoryDestination;
 		this.schedulerUtils = schedulerUtils;
-		LOG.trace("AdvisoryJobScheduler[{}] created", name);
+		this.delegateJobScheduler = delegateJobScheduler;
+		LOG.trace("AdvisoryJobScheduler[{}] created with delegate {}", name, advisoryDestination, delegateJobScheduler);
 	}
 
 	@Override
@@ -94,7 +90,7 @@ public class AdvisoryJobScheduler implements JobScheduler {
 	public void addListener(JobListener listener) throws Exception {
 		LOG.trace("AdvisoryJobScheduler[{}] add listener: {}", name, listener);
 
-		AdvisoryJobListener advisoryJobListener = new AdvisoryJobListener(schedulerUtils, listener);
+		AdvisoryJobListener advisoryJobListener = new AdvisoryJobListener(advisoryDestination, schedulerUtils, listener);
 		jobListeners.put(listener, advisoryJobListener);
 
 		if(null != delegateJobScheduler) {
