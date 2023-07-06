@@ -31,7 +31,7 @@
 
   <groupId>org.apache.activemq</groupId>
   <artifactId>activemq-scheduler-store-advisory</artifactId>
-  <version>${activemq-version}.1</version>
+  <version>${activemq-version}.3</version>
   <packaging>jar</packaging>
   <name>ActiveMQ :: Advisory Store</name>
   <description>The ActiveMQ Advisory Store Implementation</description>

@@ -187,8 +187,6 @@ public class AdvisoryJobListener implements JobListener {
 
 	protected void forwardMessage(Message message) throws Exception {
 		message.setOriginalTransactionId(null);
-		message.setPersistent(false);
-		message.setType(AdvisorySupport.ADIVSORY_MESSAGE_TYPE);
 		message.setMessageId(new MessageId(producerId, messageIdGenerator.getNextSequenceId()));
 
 		// Preserve original destination
