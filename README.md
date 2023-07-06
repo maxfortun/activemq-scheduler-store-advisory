@@ -55,7 +55,7 @@ While this is not a well documented feature, broker does allow to specify a cust
 		  	class="org.apache.activemq.broker.scheduler.advisory.AdvisoryJobSchedulerStore">
 	  
     			<constructor-arg ref="broker" />
-    			<constructor-arg ref="VirtualTopic.ActiveMQ.Scheduler.Advisory" />
+    			<constructor-arg ref="VirtualTopic.Scheduler.Advisory" />
     			<constructor-arg>
       				<bean xmlns="http://www.springframework.org/schema/beans" 
 			      		id="jobSchedulerStoreDelegate" 
