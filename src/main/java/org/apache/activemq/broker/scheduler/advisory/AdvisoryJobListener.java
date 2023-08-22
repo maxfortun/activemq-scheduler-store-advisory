@@ -159,14 +159,14 @@ public class AdvisoryJobListener implements JobListener {
 
 	public void willRemoveJob(String id, ByteSequence job) throws Exception {
 		LOG.debug("Remove job {}", id);
-        Message message = schedulerUtils.toMessage(id, job);
+        Message message = (null != job ? schedulerUtils.toMessage(id, job) : schedulerUtils.createMessage(id));
         message.setProperty(AMQ_SCHEDULER_ADVISORY, AMQ_SCHEDULER_ADVISORY_REMOVE);
         forwardMessage(message);
 	}
 
 	public void didRemoveJob(String id, ByteSequence job) throws Exception {
 		LOG.debug("Removed job {}", id);
-        Message message = schedulerUtils.toMessage(id, job);
+        Message message = (null != job ? schedulerUtils.toMessage(id, job) : schedulerUtils.createMessage(id));
         message.setProperty(AMQ_SCHEDULER_ADVISORY, AMQ_SCHEDULER_ADVISORY_REMOVED);
         forwardMessage(message);
 	}
