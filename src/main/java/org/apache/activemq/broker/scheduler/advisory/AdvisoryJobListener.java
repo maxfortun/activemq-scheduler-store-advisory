@@ -96,11 +96,11 @@ public class AdvisoryJobListener implements JobListener {
 
 	private final AdvisoryJobScheduler advisoryJobScheduler;
 	private final SchedulerUtils schedulerUtils;
-        private final JobListener delegateJobListener;
-	private final String commandPrefix;
+	private final JobListener delegateJobListener; 
 
 	private ActiveMQDestination destination;
 
+	private final String commandPrefix;
 	public AdvisoryJobListener(AdvisoryJobScheduler advisoryJobScheduler, String destinationName, SchedulerUtils schedulerUtils, JobListener delegateJobListener, String commandPrefix) {
 		this.advisoryJobScheduler = advisoryJobScheduler;
 		this.schedulerUtils = schedulerUtils;
