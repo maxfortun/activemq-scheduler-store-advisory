@@ -191,8 +191,6 @@ public class AdvisoryJobScheduler implements JobScheduler {
 	public void remove(String jobId, Message message) throws Exception {
 		ByteSequence payload = jobs.get(jobId);
 
-		//merge
-
 		for(AdvisoryJobListener advisoryJobListener : jobListeners.values()) {
 			advisoryJobListener.willRemoveJob(jobId, payload, message);
 		}
@@ -279,9 +277,6 @@ public class AdvisoryJobScheduler implements JobScheduler {
 
 	public void removeJob(String jobId) {
 		jobs.remove(jobId);
-	}
-	public void removeJob(String jobId, ByteSequence message) {
-		removeJob(jobId);
 	}
 
 	@Override
