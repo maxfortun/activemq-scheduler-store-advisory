@@ -69,13 +69,13 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-log4j12</artifactId>
-      <version>${slf4j-version}</version>
+	<version>${slf4j-version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.redisson</groupId>
-      <artifactId>redisson</artifactId>
-      <version>3.17.3</version>
+        <groupId>org.redisson</groupId>
+        <artifactId>redisson</artifactId>
+        <version>3.17.3</version>
     </dependency>
 
   </dependencies>
@@ -97,24 +97,24 @@
   <build>
     <plugins>
 
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <configuration>
-          <source>${source-version}</source>
-          <target>${target-version}</target>
-          <optimize>true</optimize>
-          <debug>true</debug>
-          <showDeprecation>true</showDeprecation>
-          <showWarnings>true</showWarnings>
-        </configuration>
-      </plugin>
+     <plugin>
+       <groupId>org.apache.maven.plugins</groupId>
+       <artifactId>maven-compiler-plugin</artifactId>
+       <configuration>
+         <source>${source-version}</source>
+         <target>${target-version}</target>
+         <optimize>true</optimize>
+         <debug>true</debug>
+         <showDeprecation>true</showDeprecation>
+         <showWarnings>true</showWarnings>
+       </configuration>
+     </plugin>
 
-      <plugin>
+     <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-          <forkCount>1</forkCount>
-          <reuseForks>false</reuseForks>
+            <forkCount>1</forkCount>
+            <reuseForks>false</reuseForks>
           <argLine>${surefire.argLine}</argLine>
           <runOrder>alphabetical</runOrder>
           <systemProperties>
