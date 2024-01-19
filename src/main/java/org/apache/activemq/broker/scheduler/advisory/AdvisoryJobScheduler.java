@@ -24,11 +24,13 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.activemq.ScheduledMessage;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.scheduler.Job;
 import org.apache.activemq.broker.scheduler.JobListener;
 import org.apache.activemq.broker.scheduler.JobScheduler;
 
+import org.apache.activemq.command.Message;
 import org.apache.activemq.util.ByteSequence;
 
 import org.apache.activemq.broker.scheduler.SchedulerUtils;
@@ -164,13 +166,13 @@ public class AdvisoryJobScheduler implements JobScheduler {
 	}
 
 	@Override
-	public void remove(long time) throws Exception {
+	public void remove(long time, Message message) throws Exception {
 		for(AdvisoryJobListener advisoryJobListener : jobListeners.values()) {
 			advisoryJobListener.willRemoveRange(time, time, jobs);
 		}
 
 		if(null != delegateJobScheduler) {
-			delegateJobScheduler.remove(time);
+			delegateJobScheduler.remove(time, message);
 		}
 
 		for(AdvisoryJobListener advisoryJobListener : jobListeners.values()) {
@@ -184,32 +186,34 @@ public class AdvisoryJobScheduler implements JobScheduler {
 	}
 
 	@Override
-	public void remove(String jobId) throws Exception {
+	public void remove(String jobId, Message message) throws Exception {
 		ByteSequence payload = jobs.get(jobId);
 
+		//merge
+
 		for(AdvisoryJobListener advisoryJobListener : jobListeners.values()) {
-			advisoryJobListener.willRemoveJob(jobId, payload);
+			advisoryJobListener.willRemoveJob(jobId, payload, message);
 		}
 
 		if(null != delegateJobScheduler) {
-			delegateJobScheduler.remove(jobId);
+			delegateJobScheduler.remove(jobId, message);
 		}
 
 		for(AdvisoryJobListener advisoryJobListener : jobListeners.values()) {
-			advisoryJobListener.didRemoveJob(jobId, payload);
+			advisoryJobListener.didRemoveJob(jobId, payload, message);
 		}
 
 		removeJob(jobId);
 	}
 
 	@Override
-	public void removeAllJobs() throws Exception {
+	public void removeAllJobs(Message message) throws Exception {
 		for(AdvisoryJobListener advisoryJobListener : jobListeners.values()) {
 			advisoryJobListener.willRemoveRange(0, Long.MAX_VALUE, jobs);
 		}
 
 		if(null != delegateJobScheduler) {
-			delegateJobScheduler.removeAllJobs();
+			delegateJobScheduler.removeAllJobs(message);
 		}
 
 		for(AdvisoryJobListener advisoryJobListener : jobListeners.values()) {
@@ -220,13 +224,13 @@ public class AdvisoryJobScheduler implements JobScheduler {
 	}
 
 	@Override
-	public void removeAllJobs(long start, long finish) throws Exception {
+	public void removeAllJobs(long start, long finish, Message message) throws Exception {
 		for(AdvisoryJobListener advisoryJobListener : jobListeners.values()) {
 			advisoryJobListener.willRemoveRange(start, finish, jobs);
 		}
 
 		if(null != delegateJobScheduler) {
-			delegateJobScheduler.removeAllJobs(start, finish);
+			delegateJobScheduler.removeAllJobs(start, finish, message);
 		}
 
 		for(AdvisoryJobListener advisoryJobListener : jobListeners.values()) {
@@ -274,6 +278,9 @@ public class AdvisoryJobScheduler implements JobScheduler {
 	public void removeJob(String jobId) {
 		jobs.remove(jobId);
 	}
+	public void removeJob(String jobId, ByteSequence message) {
+		removeJob(jobId);
+	}
 
 	@Override
 	public int hashCode() {
@@ -284,4 +291,23 @@ public class AdvisoryJobScheduler implements JobScheduler {
 	public String toString() {
 		return "JobScheduler: " + name;
 	}
+
+	//public void managementMessageReceived(ByteSequence managementPayload) throws Exception {
+	/*
+	public void managementMessageReceived(ByteSequence managementPayload) throws Exception {
+		Message managementMessage = schedulerUtils.toMessage(managementPayload);
+		String jobId = (String) managementMessage.getProperty(ScheduledMessage.AMQ_SCHEDULED_ID);
+		String managementTimestamp = (String) managementMessage.getProperty("JMSTimestamp");
+		String managementUser = (String) managementMessage.getProperty("user");
+
+		ByteSequence payload = jobs.get(jobId);
+		Message jobMessage = schedulerUtils.toMessage(payload);
+		//pseudocode
+		jobMessage.setProperty("managed-timestamp", managementTimestamp);
+		jobMessage.setProperty("managed-user", managementUser);
+
+		ByteSequence updatedJob = schedulerUtils.toByteSequence(jobMessage);
+		jobs.put(jobId, updatedJob);
+	}
+	 */
 }

@@ -157,16 +157,20 @@ public class AdvisoryJobListener implements JobListener {
         forwardMessage(message);
 	}
 
-	public void willRemoveJob(String id, ByteSequence job) throws Exception {
+	public void willRemoveJob(String id, ByteSequence job, Message messageSend) throws Exception {
 		LOG.debug("Remove job {}", id);
-        Message message = (null != job ? schedulerUtils.toMessage(id, job) : schedulerUtils.createMessage(id));
-        message.setProperty(AMQ_SCHEDULER_ADVISORY, AMQ_SCHEDULER_ADVISORY_REMOVE);
+        Message messageJob = (null != job ? schedulerUtils.toMessage(id, job) : schedulerUtils.createMessage(id));
+		Message message = schedulerUtils.copyProperties(messageJob, messageSend);//messageSend.copy();
+
+		message.setProperty(AMQ_SCHEDULER_ADVISORY, AMQ_SCHEDULER_ADVISORY_REMOVE);
         forwardMessage(message);
 	}
 
-	public void didRemoveJob(String id, ByteSequence job) throws Exception {
+	public void didRemoveJob(String id, ByteSequence job, Message messageSend) throws Exception {
 		LOG.debug("Removed job {}", id);
-        Message message = (null != job ? schedulerUtils.toMessage(id, job) : schedulerUtils.createMessage(id));
+        Message messageJob = (null != job ? schedulerUtils.toMessage(id, job) : schedulerUtils.createMessage(id));
+		Message message = schedulerUtils.copyProperties(messageJob, messageSend);//messageSend.copy();
+
         message.setProperty(AMQ_SCHEDULER_ADVISORY, AMQ_SCHEDULER_ADVISORY_REMOVED);
         forwardMessage(message);
 	}

@@ -25,13 +25,14 @@
     <junit-version>4.13.2</junit-version>
     <mockito-version>4.8.1</mockito-version>
     <activemq-version>5.18.1</activemq-version>
+    <activemq-snapshot-version>5.18.1.2</activemq-snapshot-version>
     <source-version>11</source-version>
     <target-version>11</target-version>
   </properties>
 
   <groupId>org.apache.activemq</groupId>
   <artifactId>activemq-scheduler-store-advisory</artifactId>
-  <version>${activemq-version}.4</version>
+  <version>${activemq-version}.8</version>
   <packaging>jar</packaging>
   <name>ActiveMQ :: Advisory Store</name>
   <description>The ActiveMQ Advisory Store Implementation</description>
@@ -40,7 +41,7 @@
     <dependency>
       <groupId>org.apache.activemq</groupId>
       <artifactId>activemq-broker</artifactId>
-      <version>${activemq-version}</version>
+      <version>${activemq-snapshot-version}</version>
       <scope>provided</scope>
     </dependency>
 
@@ -62,7 +63,7 @@
     <dependency>
       <groupId>org.apache.activemq</groupId>
       <artifactId>activemq-broker</artifactId>
-      <version>${activemq-version}</version>
+      <version>${activemq-snapshot-version}</version>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
@@ -141,5 +142,18 @@
       </plugin>
     </plugins>
   </build>
+
+  <distributionManagement>
+    <repository>
+      <id>artifactory</id>
+      <name>artifactory-releases</name>
+      <url>https://artifactory-publish.prod.dowjones.io:443/artifactory/djsp-pubedit-release-local</url>
+    </repository>
+    <snapshotRepository>
+      <id>artifactory-snapshots</id>
+      <name>artifactory-snapshots</name>
+      <url>https://artifactory-publish.prod.dowjones.io:443/artifactory/djsp-pubedit-release-local</url>
+    </snapshotRepository>
+  </distributionManagement>
 
 </project>
