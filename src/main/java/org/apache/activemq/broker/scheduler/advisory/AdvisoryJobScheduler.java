@@ -291,23 +291,4 @@ public class AdvisoryJobScheduler implements JobScheduler {
 	public String toString() {
 		return "JobScheduler: " + name;
 	}
-
-	//public void managementMessageReceived(ByteSequence managementPayload) throws Exception {
-	/*
-	public void managementMessageReceived(ByteSequence managementPayload) throws Exception {
-		Message managementMessage = schedulerUtils.toMessage(managementPayload);
-		String jobId = (String) managementMessage.getProperty(ScheduledMessage.AMQ_SCHEDULED_ID);
-		String managementTimestamp = (String) managementMessage.getProperty("JMSTimestamp");
-		String managementUser = (String) managementMessage.getProperty("user");
-
-		ByteSequence payload = jobs.get(jobId);
-		Message jobMessage = schedulerUtils.toMessage(payload);
-		//pseudocode
-		jobMessage.setProperty("managed-timestamp", managementTimestamp);
-		jobMessage.setProperty("managed-user", managementUser);
-
-		ByteSequence updatedJob = schedulerUtils.toByteSequence(jobMessage);
-		jobs.put(jobId, updatedJob);
-	}
-	 */
 }
