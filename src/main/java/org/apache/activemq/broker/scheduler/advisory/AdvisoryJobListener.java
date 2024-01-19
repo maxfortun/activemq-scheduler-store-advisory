@@ -100,11 +100,13 @@ public class AdvisoryJobListener implements JobListener {
 
 	private ActiveMQDestination destination;
 
-	public AdvisoryJobListener(AdvisoryJobScheduler advisoryJobScheduler, String destinationName, SchedulerUtils schedulerUtils, JobListener delegateJobListener) {
+	private final String commandPrefix;
+	public AdvisoryJobListener(AdvisoryJobScheduler advisoryJobScheduler, String destinationName, SchedulerUtils schedulerUtils, JobListener delegateJobListener, String commandPrefix) {
 		this.advisoryJobScheduler = advisoryJobScheduler;
 		this.schedulerUtils = schedulerUtils;
 		this.delegateJobListener = delegateJobListener;
 		this.destination = ActiveMQDestination.createDestination(destinationName, ActiveMQDestination.TOPIC_TYPE);
+		this.commandPrefix = commandPrefix;
 		LOG.info("Destination: {}", this.destination);
 
 		producerId.setConnectionId(ID_GENERATOR.generateId());
@@ -157,18 +159,22 @@ public class AdvisoryJobListener implements JobListener {
         forwardMessage(message);
 	}
 
-	public void willRemoveJob(String id, ByteSequence job) throws Exception {
+	public void willRemoveJob(String id, ByteSequence job, Message messageSend) throws Exception {
 		LOG.debug("Remove job {}", id);
-        Message message = (null != job ? schedulerUtils.toMessage(id, job) : schedulerUtils.createMessage(id));
-        message.setProperty(AMQ_SCHEDULER_ADVISORY, AMQ_SCHEDULER_ADVISORY_REMOVE);
-        forwardMessage(message);
+        Message messageJob = (null != job ? schedulerUtils.toMessage(id, job) : schedulerUtils.createMessage(id));
+		schedulerUtils.copyProperties(messageJob, messageSend, commandPrefix);
+
+		messageJob.setProperty(AMQ_SCHEDULER_ADVISORY, AMQ_SCHEDULER_ADVISORY_REMOVE);
+        forwardMessage(messageJob);
 	}
 
-	public void didRemoveJob(String id, ByteSequence job) throws Exception {
+	public void didRemoveJob(String id, ByteSequence job, Message messageSend) throws Exception {
 		LOG.debug("Removed job {}", id);
-        Message message = (null != job ? schedulerUtils.toMessage(id, job) : schedulerUtils.createMessage(id));
-        message.setProperty(AMQ_SCHEDULER_ADVISORY, AMQ_SCHEDULER_ADVISORY_REMOVED);
-        forwardMessage(message);
+        Message messageJob = (null != job ? schedulerUtils.toMessage(id, job) : schedulerUtils.createMessage(id));
+		schedulerUtils.copyProperties(messageJob, messageSend, commandPrefix);
+
+		messageJob.setProperty(AMQ_SCHEDULER_ADVISORY, AMQ_SCHEDULER_ADVISORY_REMOVED);
+        forwardMessage(messageJob);
 	}
 
 	public void willRemoveRange(long start, long end, Map<String,ByteSequence> jobs) throws Exception {

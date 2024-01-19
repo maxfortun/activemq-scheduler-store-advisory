@@ -41,6 +41,8 @@ import org.apache.activemq.command.MessageId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Map;
+
 public class SchedulerUtils implements BrokerServiceAware {
 	private static final Logger LOG = LoggerFactory.getLogger(SchedulerUtils.class);
 	private static final LongSequenceGenerator longGenerator = new LongSequenceGenerator();
@@ -93,8 +95,21 @@ public class SchedulerUtils implements BrokerServiceAware {
 		return message;
 	}
 
-	public Message toMessage(String id, ByteSequence payload) throws Exception {
+	public ByteSequence toByteSequence(Message message) throws Exception {
+		return wireFormat.marshal(message);
+	}
+	public Message toMessage(ByteSequence payload) throws Exception {
 		Message message = (Message)wireFormat.unmarshal(payload);
+
+		return message;
+	}
+	public void copyProperties(Message toMessageJob, Message fromMessage, String commandPrefix) throws Exception {
+		for (Map.Entry<String,Object> entry : fromMessage.getProperties().entrySet()) {
+			toMessageJob.setProperty(commandPrefix+entry.getKey(), entry.getValue());
+		}
+	}
+	public Message toMessage(String id, ByteSequence payload) throws Exception {
+		Message message = toMessage(payload);
 		// TODO: check if message already has a job id and compare it to the actual job id. Should not really conflict.
 		message.setProperty(ScheduledMessage.AMQ_SCHEDULED_ID, id);
 		return message;

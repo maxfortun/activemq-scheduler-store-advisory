@@ -24,11 +24,13 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.activemq.ScheduledMessage;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.scheduler.Job;
 import org.apache.activemq.broker.scheduler.JobListener;
 import org.apache.activemq.broker.scheduler.JobScheduler;
 
+import org.apache.activemq.command.Message;
 import org.apache.activemq.util.ByteSequence;
 
 import org.apache.activemq.broker.scheduler.SchedulerUtils;
@@ -47,16 +49,18 @@ public class AdvisoryJobScheduler implements JobScheduler {
 	private final String advisoryDestination;
 	private final SchedulerUtils schedulerUtils;
 	private final JobScheduler delegateJobScheduler;
+	private final String commandPrefix;
 
 	private final AtomicBoolean dispatchEnabled = new AtomicBoolean(false);
 	private final Map<JobListener, AdvisoryJobListener> jobListeners = new ConcurrentHashMap<>();
 	private final Map<String, ByteSequence> jobs = new ConcurrentHashMap<>();
 
-	public AdvisoryJobScheduler(String name, String advisoryDestination, SchedulerUtils schedulerUtils, JobScheduler delegateJobScheduler) {
+	public AdvisoryJobScheduler(String name, String advisoryDestination, SchedulerUtils schedulerUtils, JobScheduler delegateJobScheduler, String commandPrefix) {
 		this.name = name;
 		this.advisoryDestination = advisoryDestination;
 		this.schedulerUtils = schedulerUtils;
 		this.delegateJobScheduler = delegateJobScheduler;
+		this.commandPrefix = commandPrefix;
 		LOG.trace("AdvisoryJobScheduler[{}] created with delegate {}", name, advisoryDestination, delegateJobScheduler);
 	}
 
@@ -91,7 +95,7 @@ public class AdvisoryJobScheduler implements JobScheduler {
 	public void addListener(JobListener listener) throws Exception {
 		LOG.trace("AdvisoryJobScheduler[{}] add listener: {}", name, listener);
 
-		AdvisoryJobListener advisoryJobListener = new AdvisoryJobListener(this, advisoryDestination, schedulerUtils, listener);
+		AdvisoryJobListener advisoryJobListener = new AdvisoryJobListener(this, advisoryDestination, schedulerUtils, listener, commandPrefix);
 		jobListeners.put(listener, advisoryJobListener);
 
 		if(null != delegateJobScheduler) {
@@ -164,13 +168,13 @@ public class AdvisoryJobScheduler implements JobScheduler {
 	}
 
 	@Override
-	public void remove(long time) throws Exception {
+	public void remove(long time, Message message) throws Exception {
 		for(AdvisoryJobListener advisoryJobListener : jobListeners.values()) {
 			advisoryJobListener.willRemoveRange(time, time, jobs);
 		}
 
 		if(null != delegateJobScheduler) {
-			delegateJobScheduler.remove(time);
+			delegateJobScheduler.remove(time, message);
 		}
 
 		for(AdvisoryJobListener advisoryJobListener : jobListeners.values()) {
@@ -184,32 +188,32 @@ public class AdvisoryJobScheduler implements JobScheduler {
 	}
 
 	@Override
-	public void remove(String jobId) throws Exception {
+	public void remove(String jobId, Message message) throws Exception {
 		ByteSequence payload = jobs.get(jobId);
 
 		for(AdvisoryJobListener advisoryJobListener : jobListeners.values()) {
-			advisoryJobListener.willRemoveJob(jobId, payload);
+			advisoryJobListener.willRemoveJob(jobId, payload, message);
 		}
 
 		if(null != delegateJobScheduler) {
-			delegateJobScheduler.remove(jobId);
+			delegateJobScheduler.remove(jobId, message);
 		}
 
 		for(AdvisoryJobListener advisoryJobListener : jobListeners.values()) {
-			advisoryJobListener.didRemoveJob(jobId, payload);
+			advisoryJobListener.didRemoveJob(jobId, payload, message);
 		}
 
 		removeJob(jobId);
 	}
 
 	@Override
-	public void removeAllJobs() throws Exception {
+	public void removeAllJobs(Message message) throws Exception {
 		for(AdvisoryJobListener advisoryJobListener : jobListeners.values()) {
 			advisoryJobListener.willRemoveRange(0, Long.MAX_VALUE, jobs);
 		}
 
 		if(null != delegateJobScheduler) {
-			delegateJobScheduler.removeAllJobs();
+			delegateJobScheduler.removeAllJobs(message);
 		}
 
 		for(AdvisoryJobListener advisoryJobListener : jobListeners.values()) {
@@ -220,13 +224,13 @@ public class AdvisoryJobScheduler implements JobScheduler {
 	}
 
 	@Override
-	public void removeAllJobs(long start, long finish) throws Exception {
+	public void removeAllJobs(long start, long finish, Message message) throws Exception {
 		for(AdvisoryJobListener advisoryJobListener : jobListeners.values()) {
 			advisoryJobListener.willRemoveRange(start, finish, jobs);
 		}
 
 		if(null != delegateJobScheduler) {
-			delegateJobScheduler.removeAllJobs(start, finish);
+			delegateJobScheduler.removeAllJobs(start, finish, message);
 		}
 
 		for(AdvisoryJobListener advisoryJobListener : jobListeners.values()) {
