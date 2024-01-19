@@ -96,7 +96,7 @@ public class AdvisoryJobListener implements JobListener {
 
 	private final AdvisoryJobScheduler advisoryJobScheduler;
 	private final SchedulerUtils schedulerUtils;
-	private final JobListener delegateJobListener;
+        private final JobListener delegateJobListener;
 	private final String commandPrefix;
 
 	private ActiveMQDestination destination;
