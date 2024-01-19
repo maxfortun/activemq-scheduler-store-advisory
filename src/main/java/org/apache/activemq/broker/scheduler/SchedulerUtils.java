@@ -103,11 +103,10 @@ public class SchedulerUtils implements BrokerServiceAware {
 
 		return message;
 	}
-	public Message copyProperties(Message toMessageJob, Message fromMessage) throws Exception {
+	public void copyProperties(Message toMessageJob, Message fromMessage, String commandPrefix) throws Exception {
 		for (Map.Entry<String,Object> entry : fromMessage.getProperties().entrySet()) {
-			toMessageJob.setProperty(entry.getKey(), entry.getValue());
+			toMessageJob.setProperty(commandPrefix+entry.getKey(), entry.getValue());
 		}
-		return toMessageJob;
 	}
 	public Message toMessage(String id, ByteSequence payload) throws Exception {
 		Message message = toMessage(payload);

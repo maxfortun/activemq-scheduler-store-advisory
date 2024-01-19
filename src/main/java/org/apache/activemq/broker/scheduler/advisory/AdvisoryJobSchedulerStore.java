@@ -51,6 +51,7 @@ public class AdvisoryJobSchedulerStore extends ServiceSupport implements JobSche
 	private final String advisoryDestination;
 	private final BrokerService brokerService;
 	private final SchedulerUtils schedulerUtils;
+	private String commandPrefix="";
 
 	private JobSchedulerStore delegateJobSchedulerStore = null;
 	
@@ -59,6 +60,10 @@ public class AdvisoryJobSchedulerStore extends ServiceSupport implements JobSche
 		this.schedulerUtils = new SchedulerUtils(brokerService);
 		this.advisoryDestination = advisoryDestination;
 		this.delegateJobSchedulerStore = delegateJobSchedulerStore;
+	}
+	public AdvisoryJobSchedulerStore(BrokerService brokerService, String advisoryDestination, JobSchedulerStore delegateJobSchedulerStore, String commandPrefix) {
+		this(brokerService, advisoryDestination, delegateJobSchedulerStore);
+		this.commandPrefix = commandPrefix;
 	}
 
 	public AdvisoryJobSchedulerStore(BrokerService brokerService) {
@@ -106,7 +111,7 @@ public class AdvisoryJobSchedulerStore extends ServiceSupport implements JobSche
 				if(null != delegateJobSchedulerStore) {
 					delegateJobScheduler = delegateJobSchedulerStore.getJobScheduler(name);
 				}
-				result = new AdvisoryJobScheduler(name, advisoryDestination, schedulerUtils, delegateJobScheduler);
+				result = new AdvisoryJobScheduler(name, advisoryDestination, schedulerUtils, delegateJobScheduler, commandPrefix);
 				this.schedulers.put(name, result);
 				if (isStarted()) {
 					result.startDispatching();

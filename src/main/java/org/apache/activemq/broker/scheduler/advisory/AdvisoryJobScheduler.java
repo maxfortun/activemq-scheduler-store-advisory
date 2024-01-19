@@ -49,16 +49,18 @@ public class AdvisoryJobScheduler implements JobScheduler {
 	private final String advisoryDestination;
 	private final SchedulerUtils schedulerUtils;
 	private final JobScheduler delegateJobScheduler;
+	private final String commandPrefix;
 
 	private final AtomicBoolean dispatchEnabled = new AtomicBoolean(false);
 	private final Map<JobListener, AdvisoryJobListener> jobListeners = new ConcurrentHashMap<>();
 	private final Map<String, ByteSequence> jobs = new ConcurrentHashMap<>();
 
-	public AdvisoryJobScheduler(String name, String advisoryDestination, SchedulerUtils schedulerUtils, JobScheduler delegateJobScheduler) {
+	public AdvisoryJobScheduler(String name, String advisoryDestination, SchedulerUtils schedulerUtils, JobScheduler delegateJobScheduler, String commandPrefix) {
 		this.name = name;
 		this.advisoryDestination = advisoryDestination;
 		this.schedulerUtils = schedulerUtils;
 		this.delegateJobScheduler = delegateJobScheduler;
+		this.commandPrefix = commandPrefix;
 		LOG.trace("AdvisoryJobScheduler[{}] created with delegate {}", name, advisoryDestination, delegateJobScheduler);
 	}
 
@@ -93,7 +95,7 @@ public class AdvisoryJobScheduler implements JobScheduler {
 	public void addListener(JobListener listener) throws Exception {
 		LOG.trace("AdvisoryJobScheduler[{}] add listener: {}", name, listener);
 
-		AdvisoryJobListener advisoryJobListener = new AdvisoryJobListener(this, advisoryDestination, schedulerUtils, listener);
+		AdvisoryJobListener advisoryJobListener = new AdvisoryJobListener(this, advisoryDestination, schedulerUtils, listener, commandPrefix);
 		jobListeners.put(listener, advisoryJobListener);
 
 		if(null != delegateJobScheduler) {
